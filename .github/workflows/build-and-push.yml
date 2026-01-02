@@ -1,0 +1,50 @@
+name: Build and Push Docker Image to ECR
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: ai-agent
+  IMAGE_NAME: ai-agent
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::557514745876:role/github-actions-ecr-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract git SHA
+        id: vars
+        run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:${{ steps.vars.outputs.SHA }} .
+
+      - name: Tag Docker image
+        run: |
+          docker tag $IMAGE_NAME:${{ steps.vars.outputs.SHA }} \
+            557514745876.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.SHA }}
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push \
+            557514745876.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.SHA }}
