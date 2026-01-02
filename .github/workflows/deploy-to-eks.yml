@@ -1,10 +1,10 @@
-name: Build & Deploy to EKS
+name: Deploy to EKS
 
 on:
-  push:
-    branches:
-      - master
-      - main
+  workflow_run:
+    workflows: ["Build and Push Docker Image to ECR"]
+    types:
+      - completed
 
 permissions:
   id-token: write
@@ -12,11 +12,12 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: ai-agent
   EKS_CLUSTER_NAME: ai-agent-cluster
+  K8S_NAMESPACE: ai-agent
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -29,16 +30,11 @@ jobs:
           role-to-assume: arn:aws:iam::557514745876:role/github-actions-ecr-role
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push Docker image
+      - name: Install kubectl
         run: |
-          docker build -t $ECR_REPOSITORY:latest .
-          docker tag $ECR_REPOSITORY:latest \
-            557514745876.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPOSITORY:latest
-          docker push \
-            557514745876.dkr.ecr.us-east-1.amazonaws.com/$ECR_REPOSITORY:latest
+          curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
 
       - name: Update kubeconfig
         run: |
@@ -46,11 +42,15 @@ jobs:
             --region $AWS_REGION \
             --name $EKS_CLUSTER_NAME
 
-      - name: Deploy to EKS
+      - name: Verify cluster access
         run: |
-          kubectl apply -f k8s/namespace.yaml
+          kubectl get nodes
+          kubectl get ns
+
+      - name: Deploy Kubernetes manifests
+        run: |
           kubectl apply -f k8s/
 
       - name: Restart deployment
         run: |
-          kubectl rollout restart deployment ai-agent -n ai-agent
+          kubectl rollout restart deployment ai-agent -n $K8S_NAMESPACE
