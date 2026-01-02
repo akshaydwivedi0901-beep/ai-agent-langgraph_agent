@@ -2,10 +2,11 @@ fastapi
 uvicorn
 langgraph
 langchain
-langchain-community
+langchain-huggingface
+sentence-transformers>=2.6.0
 langchain-groq
 langchain-text-splitters
-sentence-transformers
+
 faiss-cpu
 pypdf
 sympy
