@@ -17,11 +17,39 @@ spec:
         - name: ai-agent
           image: 557514745876.dkr.ecr.us-east-1.amazonaws.com/ai-agent:latest
           imagePullPolicy: Always
+
           ports:
             - containerPort: 8000
+
           env:
             - name: GROQ_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: groq-secret
                   key: api_key
+
+          # ✅ Readiness probe (when pod can receive traffic)
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+
+          # ✅ Liveness probe (when pod should be restarted)
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
