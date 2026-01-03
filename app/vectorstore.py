@@ -29,7 +29,7 @@ def build_vectorstore(pdf_path: str) -> int:
 
 def load_vectorstore():
     if not os.path.exists(VECTOR_DIR):
-        raise RuntimeError("Vector store not found. Upload a PDF first.")
+        raise RuntimeError("Vectorstore not found. Upload a PDF first.")
 
     return FAISS.load_local(
         VECTOR_DIR,
