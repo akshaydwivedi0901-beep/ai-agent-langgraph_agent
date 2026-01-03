@@ -1,14 +1,13 @@
-import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import SentenceTransformerEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+import os
 
 VECTOR_DIR = "data/index"
 
-# ✅ LOCAL embedding model (NO INTERNET)
-embeddings = SentenceTransformerEmbeddings(
-    model_name="all-MiniLM-L6-v2"
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
 def build_vectorstore(pdf_path: str) -> int:
@@ -28,8 +27,4 @@ def build_vectorstore(pdf_path: str) -> int:
     return len(chunks)
 
 def load_vectorstore():
-    return FAISS.load_local(
-        VECTOR_DIR,
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
+    return FAISS.load_local(VECTOR_DIR, embeddings)
