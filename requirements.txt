@@ -5,6 +5,7 @@ langchain==0.1.16
 langchain-community==0.0.32
 langchain-text-splitters==0.0.1
 langchain-openai==0.1.6
+langchain-groq==0.1.5
 
 faiss-cpu==1.13.2
 pypdf==4.1.0
