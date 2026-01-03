@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapRoles: |
+    - rolearn: arn:aws:iam::557514745876:role/eksctl-ai-agent-cluster-nodegroup--NodeInstanceRole-cd79IcGWPMAd
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+
+    - rolearn: arn:aws:iam::557514745876:role/github-actions-ecr-role
+      username: github-actions
+      groups:
+        - system:masters
