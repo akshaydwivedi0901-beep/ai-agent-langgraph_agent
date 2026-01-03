@@ -10,7 +10,8 @@ langchain-core==0.1.48
 
 # ---------- Embeddings / Vector Store ----------
 sentence-transformers==2.2.2
-faiss-cpu==1.7.4
+faiss-cpu==1.7.4.post2
+
 
 # ---------- Document loading ----------
 pypdf==3.17.4
