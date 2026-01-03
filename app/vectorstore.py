@@ -1,13 +1,13 @@
+import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
-import os
+from langchain_openai import OpenAIEmbeddings
 
 VECTOR_DIR = "data/index"
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-small"
 )
 
 def build_vectorstore(pdf_path: str) -> int:
