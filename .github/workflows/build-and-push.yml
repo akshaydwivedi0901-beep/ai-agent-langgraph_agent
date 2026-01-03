@@ -2,16 +2,19 @@ name: Build and Push Docker Image to ECR
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - master
   workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 557514745876
   ECR_REPOSITORY: ai-agent
   IMAGE_NAME: ai-agent
 
 jobs:
   build:
+    name: Build & Push Image
     runs-on: ubuntu-latest
 
     permissions:
@@ -19,32 +22,49 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout code
+      # --------------------------------------------------
+      # 1. Checkout source code
+      # --------------------------------------------------
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
+      # --------------------------------------------------
+      # 2. Configure AWS credentials via OIDC
+      # --------------------------------------------------
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::557514745876:role/github-actions-ecr-role
           aws-region: ${{ env.AWS_REGION }}
 
+      # --------------------------------------------------
+      # 3. Login to Amazon ECR
+      # --------------------------------------------------
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Extract git SHA
-        id: vars
-        run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Build Docker image
+      # --------------------------------------------------
+      # 4. Build Docker image (FORCE NO CACHE)
+      # --------------------------------------------------
+      - name: Build Docker image (Python 3.11, no cache)
         run: |
-          docker build -t $IMAGE_NAME:${{ steps.vars.outputs.SHA }} .
+          docker build \
+            --no-cache \
+            --build-arg CACHE_BUST=${{ github.run_id }} \
+            -t $IMAGE_NAME:latest .
 
+      # --------------------------------------------------
+      # 5. Tag image for ECR
+      # --------------------------------------------------
       - name: Tag Docker image
         run: |
-          docker tag $IMAGE_NAME:${{ steps.vars.outputs.SHA }} \
-            557514745876.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.SHA }}
+          docker tag $IMAGE_NAME:latest \
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
+      # --------------------------------------------------
+      # 6. Push image to ECR
+      # --------------------------------------------------
       - name: Push Docker image to ECR
         run: |
           docker push \
-            557514745876.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ steps.vars.outputs.SHA }}
+            $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
