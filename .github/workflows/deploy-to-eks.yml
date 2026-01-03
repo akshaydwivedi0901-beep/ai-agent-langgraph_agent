@@ -2,13 +2,8 @@ name: Deploy to EKS
 
 on:
   workflow_run:
-    workflows: ["Build and Push Docker Image to ECR"]
-    types:
-      - completed
-
-permissions:
-  id-token: write
-  contents: read
+    workflows: ["Build and Push Image"]
+    types: [completed]
 
 env:
   AWS_REGION: us-east-1
@@ -21,36 +16,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::557514745876:role/github-actions-ecr-role
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install kubectl
         run: |
-          curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+          curl -LO https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
 
       - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig \
-            --region $AWS_REGION \
-            --name $EKS_CLUSTER_NAME
+        run: aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
 
-      - name: Verify cluster access
+      - name: Deploy
         run: |
-          kubectl get nodes
-          kubectl get ns
-
-      - name: Deploy Kubernetes manifests
-        run: |
+          sed -i "s|IMAGE_TAG|${{ github.sha }}|g" k8s/deployment.yaml
           kubectl apply -f k8s/
-
-      - name: Restart deployment
-        run: |
-          kubectl rollout restart deployment ai-agent -n $K8S_NAMESPACE

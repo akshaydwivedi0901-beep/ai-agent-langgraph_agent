@@ -11,6 +11,8 @@ embeddings = OpenAIEmbeddings(
 )
 
 def build_vectorstore(pdf_path: str) -> int:
+    os.makedirs(VECTOR_DIR, exist_ok=True)
+
     loader = PyPDFLoader(pdf_path)
     docs = loader.load()
 
@@ -21,10 +23,16 @@ def build_vectorstore(pdf_path: str) -> int:
     chunks = splitter.split_documents(docs)
 
     db = FAISS.from_documents(chunks, embeddings)
-    os.makedirs(VECTOR_DIR, exist_ok=True)
     db.save_local(VECTOR_DIR)
 
     return len(chunks)
 
 def load_vectorstore():
-    return FAISS.load_local(VECTOR_DIR, embeddings)
+    if not os.path.exists(VECTOR_DIR):
+        raise RuntimeError("Vector store not found. Upload a PDF first.")
+
+    return FAISS.load_local(
+        VECTOR_DIR,
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
