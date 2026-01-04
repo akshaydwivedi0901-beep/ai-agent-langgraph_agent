@@ -6,16 +6,22 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# System deps (FAISS + PDF parsing safe)
 RUN apt-get update && apt-get install -y \
-    build-essential curl \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Python deps
 COPY requirements.txt .
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && pip check
 
+# Copy app code
 COPY app ./app
+
+# ✅ IMPORTANT: create required runtime directories
+RUN mkdir -p data/index data/pdfs
 
 EXPOSE 8000
 

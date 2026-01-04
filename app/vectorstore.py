@@ -1,15 +1,13 @@
 import os
-import shutil
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import FastEmbedEmbeddings
 
 VECTOR_DIR = "data/index"
 
-# ✅ Fully local embeddings (NO internet)
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+embeddings = FastEmbedEmbeddings(
+    model_name="BAAI/bge-small-en-v1.5"
 )
 
 def build_vectorstore(pdf_path: str) -> int:
@@ -33,13 +31,8 @@ def load_vectorstore():
     if not os.path.exists(VECTOR_DIR):
         raise RuntimeError("Vectorstore not found. Upload a PDF first.")
 
-    try:
-        return FAISS.load_local(
-            VECTOR_DIR,
-            embeddings,
-            allow_dangerous_deserialization=True
-        )
-    except Exception as e:
-        print("⚠️ Corrupted FAISS index, deleting:", e)
-        shutil.rmtree(VECTOR_DIR)
-        raise RuntimeError("Vectorstore corrupted. Please upload PDF again.")
+    return FAISS.load_local(
+        VECTOR_DIR,
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
