@@ -2,42 +2,34 @@ name: Deploy to EKS
 
 on:
   push:
-    branches:
-      - master
-  workflow_dispatch:
-
-env:
-  AWS_REGION: us-east-1
-  CLUSTER_NAME: ai-agent-cluster
-  ECR_REGISTRY: 557514745876.dkr.ecr.us-east-1.amazonaws.com
-  IMAGE_NAME: ai-agent
+    branches: [ "master" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push Docker image
         run: |
-          docker build -t $ECR_REGISTRY/$IMAGE_NAME:latest .
-          docker push $ECR_REGISTRY/$IMAGE_NAME:latest
+          IMAGE_TAG=latest
+          docker build -t $ECR_REGISTRY/ai-agent:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/ai-agent:$IMAGE_TAG
 
       - name: Deploy to EKS
         run: |
-          aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-          kubectl set image deployment/ai-agent ai-agent=$ECR_REGISTRY/$IMAGE_NAME:latest -n ai-agent
-          kubectl rollout restart deployment/ai-agent -n ai-agent
-          kubectl rollout status deployment/ai-agent -n ai-agent
+          aws eks update-kubeconfig --region us-east-1 --name ai-agent-cluster
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml

@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ai-agent
-  namespace: ai-agent
+  labels:
+    app: ai-agent
 spec:
   replicas: 2
   selector:
@@ -14,17 +15,12 @@ spec:
         app: ai-agent
     spec:
       containers:
-        - name: ai-agent
-          image: 557514745876.dkr.ecr.us-east-1.amazonaws.com/ai-agent:latest
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          env:
-            - name: GROQ_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: ai-agent-secrets
-                  key: GROQ_API_KEY
-            - name: ENVIRONMENT
-              value: "production"
-      restartPolicy: Always
+      - name: ai-agent
+        image: 557514745876.dkr.ecr.us-east-1.amazonaws.com/ai-agent:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: AWS_REGION
+          value: us-east-1
+        - name: STAGE
+          value: production
