@@ -27,12 +27,22 @@ def build_vectorstore(pdf_path: str) -> int:
 
     return len(chunks)
 
+
+
 def load_vectorstore():
     if not os.path.exists(VECTOR_DIR):
         raise RuntimeError("Vectorstore not found. Upload a PDF first.")
 
-    return FAISS.load_local(
-        VECTOR_DIR,
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
+    try:
+        return FAISS.load_local(
+            VECTOR_DIR,
+            embeddings,
+            allow_dangerous_deserialization=True
+        )
+    except Exception as e:
+        # Corrupted or incompatible index
+        print("⚠️ FAISS load failed, deleting index:", e)
+        import shutil
+        shutil.rmtree(VECTOR_DIR)
+        raise RuntimeError("Vectorstore was incompatible. Please upload PDF again.")
+
