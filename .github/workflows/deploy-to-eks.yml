@@ -20,13 +20,18 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ai-agent
+          IMAGE_TAG: latest
         run: |
-          IMAGE_TAG=latest
-          docker build -t $ECR_REGISTRY/ai-agent:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/ai-agent:$IMAGE_TAG
+          echo "Building and pushing image to ECR..."
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy to EKS
         run: |
