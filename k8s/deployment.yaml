@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: ai-agent
-          image: 557514745876.dkr.ecr.us-east-1.amazonaws.com/ai-agent:latest
+          # ⛔ DO NOT USE :latest
+          image: 557514745876.dkr.ecr.us-east-1.amazonaws.com/ai-agent:IMAGE_TAG
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -27,8 +28,9 @@ spec:
               cpu: "500m"
               memory: "1Gi"
           env:
-            - name: OPENAI_API_KEY
+            # ✅ USE GROQ KEY
+            - name: GROQ_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: openai-secret
+                  name: groq-secret
                   key: api_key
