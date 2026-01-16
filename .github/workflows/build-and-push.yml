@@ -23,7 +23,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::557514745876:role/github-actions-ecr-role
+          role-to-assume: arn:aws:iam::273801025923:role/github-actions-ecr-role
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -31,7 +31,7 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          IMAGE=557514745876.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA}
+          IMAGE=273801025923.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${GITHUB_SHA}
           echo "Building image: $IMAGE"
           docker build -t $IMAGE .
           docker push $IMAGE
