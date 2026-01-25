@@ -2,7 +2,10 @@ name: Build and Push Image
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+      - develop
+      - "feature/*"
 
 env:
   AWS_REGION: us-east-1
