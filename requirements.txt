@@ -2,11 +2,16 @@ fastapi
 uvicorn
 python-multipart
 
+# ---- LangChain / LLM ----
 langchain
 langchain-community
 langchain-groq
 
+# ---- Vector Search / PDFs ----
 faiss-cpu
 pypdf
-
 fastembed
+
+# ---- Production Infrastructure ----
+redis
+python-dotenv

@@ -3,17 +3,16 @@ kind: Ingress
 metadata:
   name: ai-agent-ingress
   annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
 spec:
+  ingressClassName: nginx
   rules:
-    - http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: ai-agent
-                port:
-                  number: 80
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-agent
+            port:
+              number: 80
